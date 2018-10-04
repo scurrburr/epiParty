@@ -22,14 +22,23 @@ class Circle {
 
 class Curve {
   constructor(pStrokeWeight) {
-    this.strokeWeight = pStrokeWeight ? pStrokeWeight : 20;
+    this.strokeWeight = pStrokeWeight ? pStrokeWeight : curveStrokeWeight;
+
+    // Initialize points array
+    // Will contain multiples of [positionX, positionY]
     this.points = [];
+
+    // Set first Color
+    this.setColor();
   }
 
-  setColour() {
-    // this.colourHex = rand;
-    // this.colourAlpha = pColourAlpha;
-    this.colour = color(Math.floor(random()*255), Math.floor(random()*255), Math.floor(random()*255));
+  setColor() {
+    let red = Math.floor(random() * 255);
+    let green = Math.floor(random() * 255);
+    let blue = Math.floor(random() * 255);
+    let alpha = Math.floor(random() * 255);
+
+    this.color = color(red, blue, green, alpha);
   }
 
   addPoint(pPointX, pPointY) {
@@ -37,7 +46,7 @@ class Curve {
   }
 
   draw() {
-    stroke(this.colour);
+    stroke(this.color);
     strokeWeight(this.strokeWeight);
     noFill();
 
@@ -54,12 +63,78 @@ class Curve {
   }
 }
 
+buildEverything = () => {
+  // Build row of circles
+  for (let i = 0; i < ammountRow; i++) {
+    circleRow.push(new Circle(
+      // Position x
+      (circleRadius * 2 * (i+1)) - (3 * circleRadius),
+      // Position Y
+      circleRadius,
+      // Radius
+      circleRadius,
+      // Speed
+      (i+1),
+      // Starting-angle
+      0
+    ));
+  }
+
+  // Build collumn of circles
+  for (let i = 0; i < ammountCol; i++) {
+    circleCol.push(new Circle(
+      // Position x
+      circleRadius,
+      // Position Y
+      (circleRadius * 2 * (i+1)) - (3 * circleRadius),
+      // Radius
+      circleRadius,
+      // Speed
+      (i+1),
+      // Starting-angle
+      0
+    ));
+
+    // Create array with [Columns]x[Rows]
+    curves[i] = [];
+    for (let j = 0; j < ammountRow; j++) {
+      curves[i][j] = new Curve();
+    }
+  }
+}
+
+refreshAmmounts = () => {
+  let supposedRows = Math.round(window.innerWidth  / (circleRadius * 2)) + 3;
+  let supposedCols = Math.round(window.innerHeight / (circleRadius * 2)) + 3;
+
+  if (ammountRow != supposedRows || ammountCol != supposedCols ) {
+    ammountRow = supposedRows;
+    ammountCol = supposedCols;
+
+    circleCol = [];
+    circleRow = [];
+  }
+}
+
+clearAllCurves = () => {
+  for (let i = 0; i < ammountCol; i++) {
+    for (let j = 0; j < ammountRow; j++) {
+      curves[i][j].clear();
+    }
+  }
+}
+
 let fps = 144;
 let redrawTimeout = 546;
 let angleIncrement = 0.01;
+let initialAngle = 0;
+let curveStrokeWeight = 20;
+
 let circleRadius = 50;
+
 let ammountRow = 20;
 let ammountCol = 12;
+
 let circleRow = [];
 let circleCol = [];
 let curves = [];
@@ -68,48 +143,12 @@ function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
   frameRate(fps);
 
-  for (let i = 0; i < ammountRow; i++) {
-    // Build Row
-    circleRow.push(new Circle(circleRadius * 2 * (i+1) - 3 * circleRadius, circleRadius, circleRadius, (i+1), 0));
-  }
-
-  for (let i = 0; i < ammountCol; i++) {
-    // Build Col
-    circleCol.push(new Circle(circleRadius, circleRadius * 2 * (i+1) - 3 * circleRadius, circleRadius, (i+1), 0));
-
-    curves[i] = [];
-    for (let j = 0; j < ammountRow; j++) {
-      curves[i][j] = new Curve();
-    }
-  }
+  buildEverything();
 
   setInterval(() => {
-    for (let i = 0; i < ammountCol; i++) {
-      for (let j = 0; j < ammountRow; j++) {
-        curves[i][j].clear();
-      }
-    }
-    if (ammountRow != Math.round(window.innerWidth / (circleRadius * 2)) + 3 || ammountCol != Math.round(window.innerHeight / (circleRadius * 2)) + 3) {
-      ammountRow = Math.round(window.innerWidth / (circleRadius * 2)) + 3;
-      ammountCol = Math.round(window.innerHeight / (circleRadius * 2)) + 3;
-      circleCol = [];
-      circleRow = [];
-
-      for (let i = 0; i < ammountRow; i++) {
-        // Build Row
-        circleRow.push(new Circle(circleRadius * 2 * (i+1) - 3 * circleRadius, circleRadius, circleRadius, (i+1), 0));
-      }
-
-      for (let i = 0; i < ammountCol; i++) {
-        // Build Col
-        circleCol.push(new Circle(circleRadius, circleRadius * 2 * (i+1) - 3 * circleRadius, circleRadius, (i+1), 0));
-
-        curves[i] = [];
-        for (let j = 0; j < ammountRow; j++) {
-          curves[i][j] = new Curve();
-        }
-      }
-    }
+    clearAllCurves();
+    refreshAmmounts();
+    buildEverything();
   }, redrawTimeout);
 
 }
@@ -119,22 +158,24 @@ function setup() {
 function draw() {
   background(45);
 
+  // Update every curve
   for (let i = 0; i < ammountCol; i++) {
     for (let j = 0; j < ammountRow; j++) {
       curves[i][j].addPoint(circleRow[j].getX(), circleCol[i].getY());
-      curves[i][j].setColour();
+      curves[i][j].setColor();
       curves[i][j].draw();
     }
   }
 
-  // for (let i = 0; i < ammount; i++) {
-  //   line(circleRow[i].getX(), 0, circleRow[i].getX(), height);
-  //   line(0, circleCol[i].getY(), width, circleCol[i].getY());
-  //
-  //   circleCol[i].draw();
-  //   circleRow[i].draw();
-  // }
+  for (let i = 0; i < ammount; i++) {
+    line(circleRow[i].getX(), 0, circleRow[i].getX(), height);
+    line(0, circleCol[i].getY(), width, circleCol[i].getY());
 
+    circleCol[i].draw();
+    circleRow[i].draw();
+  }
+
+  // Update every circle (Not visible in graphics)
   for (let i = 0; i < ammountRow; i++) {
     circleRow[i].update();
   } for (let i = 0; i < ammountCol; i++) {
