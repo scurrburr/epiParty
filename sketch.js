@@ -33,10 +33,10 @@ class Curve {
   }
 
   setColor() {
-    let red = Math.floor(random() * 255);
-    let green = Math.floor(random() * 255);
-    let blue = Math.floor(random() * 255);
-    let alpha = Math.floor(random() * 255);
+    let red = 15//Math.floor(random() * 255);
+    let green = 15//Math.floor(random() * 255);
+    let blue = 15//Math.floor(random() * 255);
+    let alpha = 150//Math.floor(random() * 255);
 
     this.color = color(red, blue, green, alpha);
   }
@@ -74,9 +74,9 @@ buildEverything = () => {
       // Radius
       circleRadius,
       // Speed
-      (i+1),
+      speedFactor(i),
       // Starting-angle
-      0
+      initialAngle
     ));
   }
 
@@ -90,9 +90,9 @@ buildEverything = () => {
       // Radius
       circleRadius,
       // Speed
-      (i+1),
+      speedFactor(i),
       // Starting-angle
-      0
+      initialAngle
     ));
 
     // Create array with [Columns]x[Rows]
@@ -167,11 +167,15 @@ function TapForBPM(e) {
   return true;
 }
 
+let drawLines = false;
+let speedFactor = i =>  0.65 * (i + 1);
+// let speedFactor = i => log( 10 * (i + 1) );
+// let speedFactor = i => Math.pow( 2, 2 * log(i + 1) );
 let fps = 144;
-let redrawTimeout = 546;
-let angleIncrement = 0.01;
+let redrawTimeout = 1500;
+let angleIncrement = 0.007;
 let initialAngle = 0;
-let curveStrokeWeight = 20;
+let curveStrokeWeight = 5;
 
 let circleRadius = 50;
 
@@ -211,13 +215,15 @@ function draw() {
     }
   }
 
-  // for (let i = 0; i < ammount; i++) {
-  //   line(circleRow[i].getX(), 0, circleRow[i].getX(), height);
-  //   line(0, circleCol[i].getY(), width, circleCol[i].getY());
-  //
-  //   circleCol[i].draw();
-  //   circleRow[i].draw();
-  // }
+  if ( drawLines ) {
+    strokeWeight(1);
+    for (let i = 0; i < ammountRow; i++) {
+      line(circleRow[i].getX(), 0, circleRow[i].getX(), height);
+    }
+    for (let i = 0; i < ammountCol; i++){
+      line(0, circleCol[i].getY(), width, circleCol[i].getY());
+    }
+  }
 
   // Update every circle (Not visible in graphics)
   for (let i = 0; i < ammountRow; i++) {
