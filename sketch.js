@@ -124,6 +124,49 @@ clearAllCurves = () => {
   }
 }
 
+let count = 0;
+let msecsFirst = 0;
+let msecsPrevious = 0;
+
+function ResetCount() {
+  count = 0;
+}
+
+function TapForBPM(e) {
+  timeSeconds = new Date;
+  msecs = timeSeconds.getTime();
+
+  if ((msecs - msecsPrevious) > 2000) {
+    count = 0;
+  }
+
+  if (count == 0) {
+    msecsFirst = msecs;
+    count = 1;
+  } else {
+    bpmAvg = 60000 * count / (msecs - msecsFirst);
+    redrawTimeout = (1 / (Math.round(bpmAvg) / 60)) * 1000;
+
+    clearInterval(redrawing);
+
+    clearAllCurves();
+
+    redrawing = setInterval(() => {
+      clearAllCurves();
+      refreshAmmounts();
+      buildEverything();
+    }, redrawTimeout);
+
+    count++;
+  }
+
+  msecsPrevious = msecs;
+
+  console.log(bpmAvg);
+
+  return true;
+}
+
 let fps = 144;
 let redrawTimeout = 546;
 let angleIncrement = 0.01;
@@ -140,12 +183,13 @@ let circleCol = [];
 let curves = [];
 
 function setup() {
+  document.onkeypress = TapForBPM;
   createCanvas(window.innerWidth, window.innerHeight);
   frameRate(fps);
 
   buildEverything();
 
-  setInterval(() => {
+  redrawing = setInterval(() => {
     clearAllCurves();
     refreshAmmounts();
     buildEverything();
@@ -167,13 +211,13 @@ function draw() {
     }
   }
 
-  for (let i = 0; i < ammount; i++) {
-    line(circleRow[i].getX(), 0, circleRow[i].getX(), height);
-    line(0, circleCol[i].getY(), width, circleCol[i].getY());
-
-    circleCol[i].draw();
-    circleRow[i].draw();
-  }
+  // for (let i = 0; i < ammount; i++) {
+  //   line(circleRow[i].getX(), 0, circleRow[i].getX(), height);
+  //   line(0, circleCol[i].getY(), width, circleCol[i].getY());
+  //
+  //   circleCol[i].draw();
+  //   circleRow[i].draw();
+  // }
 
   // Update every circle (Not visible in graphics)
   for (let i = 0; i < ammountRow; i++) {
